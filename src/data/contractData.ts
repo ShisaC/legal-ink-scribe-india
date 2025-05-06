@@ -1,4 +1,3 @@
-
 import { ContractSection, ContractWarning, QuestionGroup } from '@/types/contract';
 
 export const contractSections: ContractSection[] = [
@@ -253,7 +252,7 @@ export const questionGroups: QuestionGroup[] = [
         id: 'severance',
         text: 'Will there be any severance pay?',
         type: 'text',
-        recommendation: 'Under Industrial Disputes Act, retrenchment compensation is 15 days' average pay for each completed year of service'
+        recommendation: "Under Industrial Disputes Act, retrenchment compensation is 15 days' average pay for each completed year of service"
       }
     ]
   },
