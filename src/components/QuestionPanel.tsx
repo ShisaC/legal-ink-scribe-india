@@ -29,6 +29,7 @@ interface QuestionPanelProps {
   onNext: () => void;
   onPrevious: () => void;
   onAddToAnnexure: () => void;
+  answers: Record<string, any>;
 }
 
 const QuestionPanel = ({
@@ -38,7 +39,8 @@ const QuestionPanel = ({
   totalQuestions,
   onNext,
   onPrevious,
-  onAddToAnnexure
+  onAddToAnnexure,
+  answers
 }: QuestionPanelProps) => {
   const [expandedSubQuestions, setExpandedSubQuestions] = useState<string[]>([]);
 
@@ -51,12 +53,14 @@ const QuestionPanel = ({
   };
 
   const renderQuestionInput = (question: Question) => {
+    const currentAnswer = answers[question.id] || '';
+    
     switch (question.type) {
       case 'text':
         return (
           <Input
             placeholder={question.placeholder || `Enter your answer`}
-            value={question.answer as string || ''}
+            value={currentAnswer as string || ''}
             onChange={(e) => onAnswerChange(question.id, e.target.value)}
             className="input-highlight"
           />
@@ -65,9 +69,18 @@ const QuestionPanel = ({
         return (
           <Textarea
             placeholder={question.placeholder || `Enter your answer`}
-            value={question.answer as string || ''}
+            value={currentAnswer as string || ''}
             onChange={(e) => onAnswerChange(question.id, e.target.value)}
             className="min-h-[100px] input-highlight"
+          />
+        );
+      case 'date':
+        return (
+          <Input
+            type="date"
+            value={currentAnswer as string || ''}
+            onChange={(e) => onAnswerChange(question.id, e.target.value)}
+            className="input-highlight"
           />
         );
       case 'table':
@@ -86,18 +99,25 @@ const QuestionPanel = ({
                   <tr key={rowIndex} className="border-t">
                     {question.tableHeaders?.map((header, colIndex) => {
                       const id = `${question.id}-${rowIndex}-${colIndex}`;
-                      const answers = question.answer as { [key: string]: string } || {};
+                      const tableAnswers = currentAnswer as { [key: string]: string } || {};
+                      
+                      // Default values for the first column
+                      let defaultValue = '';
+                      if (colIndex === 0) {
+                        if (rowIndex === 0) defaultValue = 'Vacation Leave';
+                        else if (rowIndex === 1) defaultValue = 'Sick Leave';
+                        else if (rowIndex === 2) defaultValue = 'Maternity Leave';
+                        else if (rowIndex === 3) defaultValue = 'Paternity Leave';
+                        else if (rowIndex === 4) defaultValue = 'Other Leaves';
+                      }
+                      
                       return (
                         <td key={colIndex} className="py-1 px-2">
                           <Input
                             placeholder={colIndex === 0 ? header : ''}
-                            value={answers[id] || (colIndex === 0 && rowIndex === 0 ? 'Vacation Leave' : 
-                                              colIndex === 0 && rowIndex === 1 ? 'Sick Leave' :
-                                              colIndex === 0 && rowIndex === 2 ? 'Maternity Leave' :
-                                              colIndex === 0 && rowIndex === 3 ? 'Paternity Leave' :
-                                              colIndex === 0 && rowIndex === 4 ? 'Other Leaves' : '')}
+                            value={tableAnswers[id] || defaultValue}
                             onChange={(e) => {
-                              const newAnswers = { ...answers, [id]: e.target.value };
+                              const newAnswers = { ...tableAnswers, [id]: e.target.value };
                               onAnswerChange(question.id, newAnswers);
                             }}
                             className="input-highlight border-0 focus:ring-0 text-sm py-1 px-2 h-8"
@@ -115,14 +135,14 @@ const QuestionPanel = ({
         return (
           <div className="flex items-center space-x-2">
             <Button
-              variant={question.answer === true ? "default" : "outline"}
+              variant={currentAnswer === true ? "default" : "outline"}
               onClick={() => onAnswerChange(question.id, true)}
               className="w-20"
             >
               Yes
             </Button>
             <Button
-              variant={question.answer === false ? "default" : "outline"}
+              variant={currentAnswer === false ? "default" : "outline"}
               onClick={() => onAnswerChange(question.id, false)}
               className="w-20"
             >

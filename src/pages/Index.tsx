@@ -4,15 +4,33 @@ import ContractStructure from '@/components/ContractStructure';
 import QuestionPanel from '@/components/QuestionPanel';
 import ContractPreview from '@/components/ContractPreview';
 import { useToast } from "@/hooks/use-toast";
-import { ContractData } from '@/types/contract';
-import { contractSections, contractWarnings, questionGroups, sampleContract } from '@/data/contractData';
-import { simplifiedQuestions, calculateProgress, getSectionFromCategory } from '@/data/questionData';
+import { ContractData, ContractSection, ContractWarning } from '@/types/contract';
+import { contractWarnings, sampleContract } from '@/data/contractData';
+import { 
+  simplifiedQuestions, 
+  calculateProgress, 
+  getSectionFromCategory,
+  getCompletedSections 
+} from '@/data/questionData';
 import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
-  const [sections, setSections] = useState(contractSections);
-  const [warnings, setWarnings] = useState(contractWarnings);
-  const [currentCategory, setCurrentCategory] = useState('basic-info');
+  // Transform the section IDs to match the required format
+  const initialSections: ContractSection[] = [
+    { id: 'preamble', title: 'Preamble', isChecked: false },
+    { id: 'recitals', title: 'Recitals', isChecked: false },
+    { id: 'definitions', title: 'Definitions', isChecked: false },
+    { id: 'operative-clauses', title: 'Operative Clauses', isChecked: false },
+    { id: 'financial-terms', title: 'Financial Terms', isChecked: false },
+    { id: 'risk-management', title: 'Risk Management', isChecked: false },
+    { id: 'boilerplate', title: 'Boilerplate Clauses', isChecked: false },
+    { id: 'termination', title: 'Termination', isChecked: false },
+    { id: 'signature', title: 'Signature & Execution', isChecked: false }
+  ];
+
+  const [sections, setSections] = useState<ContractSection[]>(initialSections);
+  const [warnings, setWarnings] = useState<ContractWarning[]>(contractWarnings);
+  const [currentCategory, setCurrentCategory] = useState('company-info');
   const [currentSection, setCurrentSection] = useState('preamble');
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [contract, setContract] = useState<ContractData>({
@@ -56,27 +74,14 @@ const Index = () => {
       activeSection: currentSection
     });
     
-    // Update sections that are completed
-    const completedCategories = Object.keys(answers).filter(id => answers[id]);
-    const completedSections = new Set<string>();
+    // Get sections that should be marked as completed based on answers
+    const completedSections = getCompletedSections(answers);
     
-    completedCategories.forEach(id => {
-      // Find which question this answer belongs to
-      const question = simplifiedQuestions.find(q => 
-        q.id === id || q.subQuestions?.some(sq => sq.id === id)
-      );
-      
-      if (question) {
-        const sectionId = getSectionFromCategory(question.id);
-        completedSections.add(sectionId);
-      }
-    });
-    
-    // Update sections with checkmarks
+    // Update sections with checkmarks based on completed sections
     setSections(prev => 
       prev.map(section => ({
         ...section,
-        isChecked: completedSections.has(section.id)
+        isChecked: completedSections.includes(section.id)
       }))
     );
     
@@ -97,6 +102,7 @@ const Index = () => {
 
   const handleSectionClick = (id: string) => {
     setCurrentSection(id);
+    
     // Find the first question category for this section
     const categoryForSection = Object.entries(getSectionFromCategory)
       .find(([_, section]) => section === id)?.[0];
@@ -197,6 +203,7 @@ const Index = () => {
               onNext={handleNextQuestion}
               onPrevious={handlePreviousQuestion}
               onAddToAnnexure={handleAddToAnnexure}
+              answers={answers}
             />
 
             <Separator className="my-4" />

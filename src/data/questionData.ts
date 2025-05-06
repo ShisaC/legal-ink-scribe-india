@@ -1,21 +1,21 @@
 
 import { Question } from '@/types/contract';
 
-// Define the simplified questions structure
+// Define the simplified questions structure - main categories with sub-questions
 export const simplifiedQuestions: Question[] = [
   {
-    id: 'basic-info',
-    text: 'Basic Information',
+    id: 'company-info',
+    text: 'Company Information',
     type: 'text',
     required: true,
     subQuestions: [
       {
         id: 'employer-name',
-        text: 'What is the name of the employer?',
+        text: 'What is the legal name of the company?',
         type: 'text',
         required: true,
         placeholder: 'Enter company name',
-        recommendation: 'Use the full registered name of the company as per incorporation documents'
+        recommendation: 'Use the full registered name of the company as per incorporation documents',
       },
       {
         id: 'employer-address',
@@ -44,12 +44,13 @@ export const simplifiedQuestions: Question[] = [
         text: 'What is the address of the employee?',
         type: 'textarea',
         required: true,
+        placeholder: 'Enter full residential address',
       }
     ]
   },
   {
-    id: 'position-info',
-    text: 'Position Information',
+    id: 'job-details',
+    text: 'Job Details',
     type: 'text',
     required: true,
     subQuestions: [
@@ -67,6 +68,13 @@ export const simplifiedQuestions: Question[] = [
         placeholder: 'e.g., Development, Testing, Support',
       },
       {
+        id: 'responsibilities',
+        text: 'What are the key responsibilities of this role?',
+        type: 'textarea',
+        required: true,
+        placeholder: 'List key job responsibilities',
+      },
+      {
         id: 'start-date',
         text: 'What is the start date of employment?',
         type: 'date',
@@ -77,6 +85,12 @@ export const simplifiedQuestions: Question[] = [
         text: 'Is this a permanent position or a fixed-term contract?',
         type: 'toggle',
         recommendation: 'Select the type of employment contract'
+      },
+      {
+        id: 'probation',
+        text: 'Is there a probation period?',
+        type: 'toggle',
+        recommendation: 'Specify probation duration if applicable'
       }
     ]
   },
@@ -99,6 +113,12 @@ export const simplifiedQuestions: Question[] = [
         placeholder: 'e.g., Monthly, Bi-weekly',
       },
       {
+        id: 'benefits',
+        text: 'What benefits are provided?',
+        type: 'textarea',
+        placeholder: 'e.g., Health insurance, Retirement plans',
+      },
+      {
         id: 'leave-details',
         text: 'Please provide the leave structure details:',
         type: 'table',
@@ -109,7 +129,7 @@ export const simplifiedQuestions: Question[] = [
     ]
   },
   {
-    id: 'confidentiality',
+    id: 'intellectual-property',
     text: 'Confidentiality & IP',
     type: 'text',
     required: true,
@@ -126,6 +146,12 @@ export const simplifiedQuestions: Question[] = [
         text: 'Does the employee agree to assign intellectual property rights to the company?',
         type: 'toggle',
         recommendation: 'Specify that all work product created during employment belongs to the employer'
+      },
+      {
+        id: 'non-compete',
+        text: 'Is there a non-compete clause?',
+        type: 'toggle',
+        recommendation: 'Non-compete clauses must have reasonable limitations to be enforceable'
       }
     ]
   },
@@ -168,6 +194,12 @@ export const simplifiedQuestions: Question[] = [
         text: 'Do you want to include an arbitration clause?',
         type: 'toggle',
         recommendation: 'Consider including mediation before arbitration or litigation'
+      },
+      {
+        id: 'bond-period',
+        text: 'Is there a bond period for the employee?',
+        type: 'toggle',
+        recommendation: 'Specify bond duration and penalty for early separation'
       }
     ]
   }
@@ -175,11 +207,11 @@ export const simplifiedQuestions: Question[] = [
 
 // Map categories to contract sections
 export const categoryToSectionMap: { [key: string]: string } = {
-  'basic-info': 'preamble',
+  'company-info': 'preamble',
   'employee-details': 'preamble',
-  'position-info': 'operative-clauses',
+  'job-details': 'operative-clauses',
   'compensation': 'financial-terms',
-  'confidentiality': 'risk-management',
+  'intellectual-property': 'risk-management',
   'termination': 'termination',
   'dispute-resolution': 'boilerplate'
 };
@@ -212,4 +244,21 @@ export const calculateProgress = (answers: Record<string, any>): number => {
   });
   
   return Math.round((answeredQuestions / totalQuestions) * 100);
+};
+
+// Get completed sections based on answers
+export const getCompletedSections = (answers: Record<string, any>): string[] => {
+  const completedCategories = new Set<string>();
+  
+  simplifiedQuestions.forEach(category => {
+    if (category.subQuestions) {
+      // Check if at least one question is answered in this category
+      const hasAnswer = category.subQuestions.some(q => answers[q.id]);
+      if (hasAnswer) {
+        completedCategories.add(getSectionFromCategory(category.id));
+      }
+    }
+  });
+  
+  return Array.from(completedCategories);
 };

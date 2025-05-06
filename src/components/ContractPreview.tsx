@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { EditIcon, Download, FileText, Eye } from 'lucide-react';
@@ -65,7 +64,6 @@ const ContractPreview = ({ contract, onEdit }: ContractPreviewProps) => {
       toast({
         title: "Export Complete",
         description: `Your ${format.toUpperCase()} document is ready to download.`,
-        variant: "success",
       });
     }, 1500);
   };
