@@ -1,0 +1,220 @@
+
+import React, { useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
+  HelpCircle, 
+  ChevronLeft, 
+  ChevronRight,
+  PlusCircle,
+  FileText
+} from 'lucide-react';
+import { Question, QuestionGroup } from '@/types/contract';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+interface QuestionPanelProps {
+  currentGroup: QuestionGroup;
+  onAnswerChange: (questionId: string, answer: any) => void;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  onNext: () => void;
+  onPrevious: () => void;
+  onAddToAnnexure: () => void;
+}
+
+const QuestionPanel = ({
+  currentGroup,
+  onAnswerChange,
+  currentQuestionIndex,
+  totalQuestions,
+  onNext,
+  onPrevious,
+  onAddToAnnexure
+}: QuestionPanelProps) => {
+  const [expandedSubQuestions, setExpandedSubQuestions] = useState<string[]>([]);
+
+  const toggleSubQuestion = (questionId: string) => {
+    setExpandedSubQuestions(prev => 
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  };
+
+  const renderQuestionInput = (question: Question) => {
+    switch (question.type) {
+      case 'text':
+        return (
+          <Input
+            placeholder={question.placeholder || `Enter your answer`}
+            value={question.answer as string || ''}
+            onChange={(e) => onAnswerChange(question.id, e.target.value)}
+            className="input-highlight"
+          />
+        );
+      case 'textarea':
+        return (
+          <Textarea
+            placeholder={question.placeholder || `Enter your answer`}
+            value={question.answer as string || ''}
+            onChange={(e) => onAnswerChange(question.id, e.target.value)}
+            className="min-h-[100px] input-highlight"
+          />
+        );
+      case 'table':
+        return (
+          <div className="border rounded-md overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-accent">
+                  {question.tableHeaders?.map((header, i) => (
+                    <th key={i} className="py-2 px-4 text-left text-sm font-medium">{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: question.tableRows || 3 }).map((_, rowIndex) => (
+                  <tr key={rowIndex} className="border-t">
+                    {question.tableHeaders?.map((header, colIndex) => {
+                      const id = `${question.id}-${rowIndex}-${colIndex}`;
+                      const answers = question.answer as { [key: string]: string } || {};
+                      return (
+                        <td key={colIndex} className="py-2 px-4">
+                          <Input
+                            placeholder={`Enter ${header.toLowerCase()}`}
+                            value={answers[id] || ''}
+                            onChange={(e) => {
+                              const newAnswers = { ...answers, [id]: e.target.value };
+                              onAnswerChange(question.id, newAnswers);
+                            }}
+                            className="input-highlight"
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      default:
+        return <Input placeholder="Enter your answer" />;
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg p-6 contract-panel-shadow h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-contractDark">{currentGroup.title}</h2>
+        <span className="text-sm text-muted-foreground">{currentQuestionIndex + 1} of {totalQuestions}</span>
+      </div>
+
+      {currentGroup.description && (
+        <p className="text-muted-foreground mb-4">{currentGroup.description}</p>
+      )}
+
+      <div className="contract-progress-bar mb-6">
+        <div 
+          className="progress" 
+          style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+        {currentGroup.questions.map((question) => (
+          <div key={question.id} className="contract-question-card">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start gap-2">
+                <span className="text-lg font-medium text-contractDark">{question.text}</span>
+                {question.recommendation && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-5 w-5 text-contractBlue cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>{question.recommendation}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+              {question.subQuestions && question.subQuestions.length > 0 && (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleSubQuestion(question.id)}
+                  className="text-contractPurple hover:text-contractBlue hover:bg-accent"
+                >
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Additional Options
+                </Button>
+              )}
+            </div>
+
+            {renderQuestionInput(question)}
+
+            {question.subQuestions && question.subQuestions.length > 0 && (
+              <div className={`mt-4 ${expandedSubQuestions.includes(question.id) ? 'block animate-fade-in' : 'hidden'}`}>
+                <Separator className="my-3" />
+                <Accordion type="single" collapsible className="w-full">
+                  {question.subQuestions.map((subQuestion) => (
+                    <AccordionItem key={subQuestion.id} value={subQuestion.id}>
+                      <AccordionTrigger className="text-sm font-medium text-contractDark">
+                        {subQuestion.text}
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-3">
+                        {renderQuestionInput(subQuestion)}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-between mt-6">
+        <Button 
+          variant="outline" 
+          onClick={onAddToAnnexure}
+          className="text-contractPurple border-contractPurple hover:text-contractBlue hover:border-contractBlue"
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Add to annexure
+        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={onPrevious}
+            disabled={currentQuestionIndex === 0}
+            className="text-contractPurple border-contractPurple hover:text-contractBlue hover:border-contractBlue"
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Previous
+          </Button>
+          <Button 
+            onClick={onNext}
+            disabled={currentQuestionIndex === totalQuestions - 1}
+            className="bg-contractBlue hover:bg-contractBlue/80"
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuestionPanel;
