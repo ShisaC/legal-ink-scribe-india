@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ContractStructure from '@/components/ContractStructure';
 import QuestionPanel from '@/components/QuestionPanel';
