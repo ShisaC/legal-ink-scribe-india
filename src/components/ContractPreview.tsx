@@ -43,30 +43,25 @@ const ContractPreview = ({ contract, onEdit }: ContractPreviewProps) => {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-contractDark">Contract Preview</h2>
-          <div className="flex items-center gap-2">
-            <div className="text-sm text-muted-foreground">
-              {contract.progress}% Complete
-            </div>
-            <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-contractBlue"
-                style={{ width: `${contract.progress}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <h2 className="text-xl font-semibold text-contractDark">Contract Preview</h2>
+        <Button 
+          onClick={onEdit}
+          variant="outline"
+          size="sm"
+          className="text-contractPurple hover:text-contractBlue"
+        >
+          <EditIcon className="h-4 w-4 mr-2" /> Edit
+        </Button>
       </CardHeader>
       
       <CardContent>
-        <div className="border rounded-md p-4 bg-white min-h-[300px] prose max-w-none overflow-y-auto max-h-[500px]">
-          <h3 className="font-bold text-lg mb-2">{contract.title}</h3>
+        <div className="border rounded-md p-4 bg-[#f7f9fc] min-h-[300px] prose max-w-none overflow-y-auto max-h-[500px] text-left">
+          <h1 className="text-2xl font-bold mb-4">{contract.title}</h1>
           {contract.content ? (
-            <div dangerouslySetInnerHTML={highlightActiveSection(contract.content, contract.activeSection)} />
+            <div dangerouslySetInnerHTML={highlightActiveSection(contract.content, contract.activeSection)} className="text-sm" />
           ) : (
-            <div className="text-muted-foreground italic">
+            <div className="text-muted-foreground italic text-center py-10">
               Your contract will appear here as you answer the questions.
             </div>
           )}
@@ -84,13 +79,17 @@ const ContractPreview = ({ contract, onEdit }: ContractPreviewProps) => {
             Export PDF
           </Button>
         </div>
-        <Button 
-          onClick={onEdit}
-          variant="outline"
-          className="text-contractPurple hover:text-contractBlue"
-        >
-          <EditIcon className="h-4 w-4 mr-2" /> Edit
-        </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground mr-2">
+            {contract.progress}% Complete
+          </span>
+          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-contractBlue"
+              style={{ width: `${contract.progress}%` }}
+            ></div>
+          </div>
+        </div>
       </CardFooter>
     </Card>
   );

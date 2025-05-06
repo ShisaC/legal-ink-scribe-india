@@ -75,28 +75,32 @@ const QuestionPanel = ({
           <div className="border rounded-md overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-accent">
+                <tr className="bg-slate-50">
                   {question.tableHeaders?.map((header, i) => (
-                    <th key={i} className="py-2 px-4 text-left text-sm font-medium">{header}</th>
+                    <th key={i} className="py-2 px-3 text-left text-sm font-medium text-gray-700">{header}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: question.tableRows || 3 }).map((_, rowIndex) => (
+                {Array.from({ length: question.tableRows || 5 }).map((_, rowIndex) => (
                   <tr key={rowIndex} className="border-t">
                     {question.tableHeaders?.map((header, colIndex) => {
                       const id = `${question.id}-${rowIndex}-${colIndex}`;
                       const answers = question.answer as { [key: string]: string } || {};
                       return (
-                        <td key={colIndex} className="py-2 px-4">
+                        <td key={colIndex} className="py-1 px-2">
                           <Input
-                            placeholder={`Enter ${header.toLowerCase()}`}
-                            value={answers[id] || ''}
+                            placeholder={colIndex === 0 ? header : ''}
+                            value={answers[id] || (colIndex === 0 && rowIndex === 0 ? 'Vacation Leave' : 
+                                              colIndex === 0 && rowIndex === 1 ? 'Sick Leave' :
+                                              colIndex === 0 && rowIndex === 2 ? 'Maternity Leave' :
+                                              colIndex === 0 && rowIndex === 3 ? 'Paternity Leave' :
+                                              colIndex === 0 && rowIndex === 4 ? 'Other Leaves' : '')}
                             onChange={(e) => {
                               const newAnswers = { ...answers, [id]: e.target.value };
                               onAnswerChange(question.id, newAnswers);
                             }}
-                            className="input-highlight"
+                            className="input-highlight border-0 focus:ring-0 text-sm py-1 px-2 h-8"
                           />
                         </td>
                       );

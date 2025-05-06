@@ -14,10 +14,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 19%; /* contractDark */
 
-    --primary: 244 16% 44%; /* contractPurple */
+    --primary: 244 16% 44%; /* contractPurple - #5E5D80 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 224 40% 58%; /* contractBlue */
+    --secondary: 224 40% 58%; /* contractBlue - #6A80C0 */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 224 40% 90%;
@@ -53,11 +53,11 @@
   }
 
   .contract-question-card {
-    @apply bg-white rounded-lg p-5 mb-4 border border-gray-100 shadow-sm transition-all hover:border-contractBlue;
+    @apply bg-white rounded-lg p-4 mb-3 border border-gray-100 shadow-sm transition-all hover:border-contractBlue;
   }
 
   .contract-structure-item {
-    @apply flex items-center gap-2 py-2 pl-3 pr-4 rounded-md text-contractDark hover:bg-accent hover:text-contractBlue transition-colors;
+    @apply flex items-center gap-2 py-1.5 pl-2 pr-3 rounded-md text-contractDark hover:bg-accent hover:text-contractBlue transition-colors;
   }
 
   .contract-structure-item.active {
@@ -81,7 +81,7 @@
   }
 
   .contract-progress-bar {
-    @apply h-2 rounded-full bg-contractBlue/20;
+    @apply h-2 rounded-full bg-gray-200;
   }
   
   .contract-progress-bar .progress {
@@ -116,5 +116,71 @@
   /* Color highlight for active section in the contract preview */
   .section-highlight {
     @apply bg-contractBlue/10 border-l-4 border-contractBlue p-2 rounded-md my-2;
+  }
+
+  /* Custom color classes for the contract app */
+  .text-contractDark {
+    @apply text-gray-800;
+  }
+
+  .bg-contractDark {
+    @apply bg-[#303030];
+  }
+
+  .text-contractPurple {
+    @apply text-[#5E5D80];
+  }
+
+  .bg-contractPurple {
+    @apply bg-[#5E5D80];
+  }
+  
+  .border-contractPurple {
+    @apply border-[#5E5D80];
+  }
+
+  .text-contractBlue {
+    @apply text-[#6A80C0];
+  }
+
+  .bg-contractBlue {
+    @apply bg-[#6A80C0];
+  }
+  
+  .border-contractBlue {
+    @apply border-[#6A80C0];
+  }
+
+  /* Table styling for leave structure */
+  .contract-table {
+    @apply w-full border-collapse;
+  }
+  
+  .contract-table th {
+    @apply bg-slate-50 text-left py-2 px-3 text-sm font-medium;
+  }
+  
+  .contract-table td {
+    @apply border-t border-gray-200 py-2 px-3;
+  }
+
+  /* For consistent styling of small buttons */
+  .btn-sm {
+    @apply py-1 px-3 text-xs font-medium rounded;
+  }
+
+  /* For progress indicator */
+  .progress-pill {
+    @apply bg-slate-100 text-contractPurple text-sm px-3 py-1 rounded-full font-medium;
+  }
+
+  /* Animation for sub-question expansion */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
   }
 }

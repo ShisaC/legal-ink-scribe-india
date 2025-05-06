@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ContractStructure from '@/components/ContractStructure';
 import QuestionPanel from '@/components/QuestionPanel';
@@ -170,9 +171,9 @@ const Index = () => {
           <h1 className="text-3xl font-bold text-contractDark">Start a fresh contract</h1>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Panel - Contract Structure */}
-          <div className="lg:col-span-4">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Left Panel - Contract Structure - Reduced from col-span-4 to col-span-3 */}
+          <div className="col-span-12 md:col-span-3">
             <ContractStructure 
               sections={sections}
               warnings={warnings}
@@ -182,8 +183,8 @@ const Index = () => {
             />
           </div>
 
-          {/* Right Panel - Questions & Contract Preview */}
-          <div className="lg:col-span-8">
+          {/* Right Panel - Questions & Contract Preview - Increased from col-span-8 to col-span-9 */}
+          <div className="col-span-12 md:col-span-9">
             <QuestionPanel 
               currentGroup={currentGroup}
               onAnswerChange={handleAnswerChange}
