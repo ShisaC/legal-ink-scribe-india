@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Question, QuestionGroup } from '@/types/contract';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 
 interface QuestionPanelProps {
   currentGroup: QuestionGroup;
@@ -106,30 +107,53 @@ const QuestionPanel = ({
             </table>
           </div>
         );
+      case 'toggle':
+        return (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={question.answer === true ? "default" : "outline"}
+              onClick={() => onAnswerChange(question.id, true)}
+              className="w-20"
+            >
+              Yes
+            </Button>
+            <Button
+              variant={question.answer === false ? "default" : "outline"}
+              onClick={() => onAnswerChange(question.id, false)}
+              className="w-20"
+            >
+              No
+            </Button>
+          </div>
+        );
       default:
         return <Input placeholder="Enter your answer" />;
     }
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 contract-panel-shadow h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-contractDark">{currentGroup.title}</h2>
-        <span className="text-sm text-muted-foreground">{currentQuestionIndex + 1} of {totalQuestions}</span>
-      </div>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-0">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-contractDark">{currentGroup.title}</h2>
+          <span className="text-sm bg-slate-100 text-contractPurple px-3 py-1 rounded-full">
+            {currentQuestionIndex + 1} of {totalQuestions}
+          </span>
+        </div>
+        
+        {currentGroup.description && (
+          <p className="text-muted-foreground mt-2">{currentGroup.description}</p>
+        )}
 
-      {currentGroup.description && (
-        <p className="text-muted-foreground mb-4">{currentGroup.description}</p>
-      )}
-
-      <div className="contract-progress-bar mb-6">
-        <div 
-          className="progress" 
-          style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
-        />
-      </div>
-
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+        <div className="contract-progress-bar mt-4">
+          <div 
+            className="progress" 
+            style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+          />
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 overflow-y-auto space-y-6 pt-4">
         {currentGroup.questions.map((question) => (
           <div key={question.id} className="contract-question-card">
             <div className="flex items-start justify-between mb-3">
@@ -141,7 +165,7 @@ const QuestionPanel = ({
                       <TooltipTrigger asChild>
                         <HelpCircle className="h-5 w-5 text-contractBlue cursor-help" />
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
+                      <TooltipContent className="max-w-xs bg-white p-2 shadow-lg border">
                         <p>{question.recommendation}</p>
                       </TooltipContent>
                     </Tooltip>
@@ -163,17 +187,36 @@ const QuestionPanel = ({
 
             {renderQuestionInput(question)}
 
+            {question.recommendation && (
+              <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                <strong>Recommendation:</strong> {question.recommendation}
+              </div>
+            )}
+
+            {question.clausePreview && question.answer && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm">
+                <strong>Clause Preview:</strong> 
+                <p className="mt-1 text-gray-700">{question.clausePreview}</p>
+              </div>
+            )}
+
             {question.subQuestions && question.subQuestions.length > 0 && (
               <div className={`mt-4 ${expandedSubQuestions.includes(question.id) ? 'block animate-fade-in' : 'hidden'}`}>
                 <Separator className="my-3" />
                 <Accordion type="single" collapsible className="w-full">
                   {question.subQuestions.map((subQuestion) => (
-                    <AccordionItem key={subQuestion.id} value={subQuestion.id}>
-                      <AccordionTrigger className="text-sm font-medium text-contractDark">
+                    <AccordionItem key={subQuestion.id} value={subQuestion.id} className="border-b-0">
+                      <AccordionTrigger className="text-sm font-medium text-contractDark py-2">
                         {subQuestion.text}
                       </AccordionTrigger>
                       <AccordionContent className="pt-3">
                         {renderQuestionInput(subQuestion)}
+                        
+                        {subQuestion.recommendation && (
+                          <div className="mt-3 p-2 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600">
+                            {subQuestion.recommendation}
+                          </div>
+                        )}
                       </AccordionContent>
                     </AccordionItem>
                   ))}
@@ -182,9 +225,9 @@ const QuestionPanel = ({
             )}
           </div>
         ))}
-      </div>
+      </CardContent>
 
-      <div className="flex justify-between mt-6">
+      <CardFooter className="justify-between pt-4 border-t">
         <Button 
           variant="outline" 
           onClick={onAddToAnnexure}
@@ -212,8 +255,8 @@ const QuestionPanel = ({
             <ChevronRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 

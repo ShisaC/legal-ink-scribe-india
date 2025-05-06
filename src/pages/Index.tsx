@@ -6,6 +6,7 @@ import ContractPreview from '@/components/ContractPreview';
 import { useToast } from "@/hooks/use-toast";
 import { QuestionGroup, ContractData } from '@/types/contract';
 import { contractSections, contractWarnings, questionGroups, sampleContract } from '@/data/contractData';
+import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
   const [sections, setSections] = useState(contractSections);
@@ -15,7 +16,8 @@ const Index = () => {
   const [contract, setContract] = useState<ContractData>({
     title: "EMPLOYMENT AGREEMENT",
     content: "",
-    progress: 0
+    progress: 0,
+    activeSection: 'preamble'
   });
   const { toast } = useToast();
   
@@ -25,6 +27,12 @@ const Index = () => {
   
   // Calculate total questions for progress
   const totalQuestionsInCurrentSection = filteredGroups.length;
+  
+  // Calculate overall progress
+  const totalGroups = questionGroups.length;
+  const completedGroups = questionGroups.filter(group => {
+    return group.questions.some(q => q.answer !== undefined);
+  }).length;
 
   useEffect(() => {
     // Reset current group index when changing sections
@@ -52,9 +60,10 @@ const Index = () => {
     setContract({
       title: "EMPLOYMENT AGREEMENT",
       content: updatedContent,
-      progress
+      progress,
+      activeSection: currentSection
     });
-  }, [questionGroups]);
+  }, [questionGroups, currentSection]);
 
   const handleSectionToggle = (id: string, checked: boolean) => {
     setSections(prev =>
@@ -164,7 +173,7 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Panel - Contract Structure */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <ContractStructure 
               sections={sections}
               warnings={warnings}
@@ -175,7 +184,7 @@ const Index = () => {
           </div>
 
           {/* Right Panel - Questions & Contract Preview */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-8">
             <QuestionPanel 
               currentGroup={currentGroup}
               onAnswerChange={handleAnswerChange}
@@ -185,6 +194,8 @@ const Index = () => {
               onPrevious={handlePreviousQuestion}
               onAddToAnnexure={handleAddToAnnexure}
             />
+
+            <Separator className="my-4" />
 
             <ContractPreview 
               contract={contract}
