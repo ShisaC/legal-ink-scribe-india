@@ -4,15 +4,17 @@ import ContractStructure from '@/components/ContractStructure';
 import QuestionPanel from '@/components/QuestionPanel';
 import ContractPreview from '@/components/ContractPreview';
 import { useToast } from "@/hooks/use-toast";
-import { QuestionGroup, ContractData } from '@/types/contract';
+import { ContractData } from '@/types/contract';
 import { contractSections, contractWarnings, questionGroups, sampleContract } from '@/data/contractData';
+import { simplifiedQuestions, calculateProgress, getSectionFromCategory } from '@/data/questionData';
 import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
   const [sections, setSections] = useState(contractSections);
   const [warnings, setWarnings] = useState(contractWarnings);
+  const [currentCategory, setCurrentCategory] = useState('basic-info');
   const [currentSection, setCurrentSection] = useState('preamble');
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, any>>({});
   const [contract, setContract] = useState<ContractData>({
     title: "EMPLOYMENT AGREEMENT",
     content: "",
@@ -21,50 +23,65 @@ const Index = () => {
   });
   const { toast } = useToast();
   
-  // Filter question groups based on current section
-  const filteredGroups = questionGroups.filter(group => group.section === currentSection);
-  const currentGroup = filteredGroups[currentGroupIndex] || questionGroups[0];
+  // Find current question group
+  const currentQuestionGroup = simplifiedQuestions.find(q => q.id === currentCategory) || simplifiedQuestions[0];
   
-  // Calculate total questions for progress
-  const totalQuestionsInCurrentSection = filteredGroups.length;
-  
-  // Calculate overall progress
-  const totalGroups = questionGroups.length;
-  const completedGroups = questionGroups.filter(group => {
-    return group.questions.some(q => q.answer !== undefined);
-  }).length;
-
+  // Update contract progress and section when answers change
   useEffect(() => {
-    // Reset current group index when changing sections
-    setCurrentGroupIndex(0);
-  }, [currentSection]);
-
-  useEffect(() => {
-    // Update contract preview with answers
-    let progress = 0;
-    let answered = 0;
-    let total = 0;
-
-    questionGroups.forEach(group => {
-      group.questions.forEach(q => {
-        total++;
-        if (q.answer) answered++;
-      });
-    });
-
-    progress = total > 0 ? Math.floor((answered / total) * 100) : 0;
+    const progress = calculateProgress(answers);
+    let updatedContent = "";
     
-    // Generate sample contract preview based on progress
-    const updatedContent = progress > 0 ? sampleContract.content : "";
-
+    if (progress > 0) {
+      // In a real app, we'd generate the contract content based on answers
+      updatedContent = sampleContract.content;
+      
+      // Simple replacements for demonstration
+      if (answers['employer-name']) {
+        updatedContent = updatedContent.replace(/\[EMPLOYER NAME\]/g, answers['employer-name']);
+      }
+      
+      if (answers['employee-name']) {
+        updatedContent = updatedContent.replace(/\[EMPLOYEE NAME\]/g, answers['employee-name']);
+      }
+      
+      if (answers['job-title']) {
+        updatedContent = updatedContent.replace(/\[JOB TITLE\]/g, answers['job-title']);
+      }
+    }
+    
     setContract({
       title: "EMPLOYMENT AGREEMENT",
       content: updatedContent,
       progress,
       activeSection: currentSection
     });
-  }, [questionGroups, currentSection]);
-
+    
+    // Update sections that are completed
+    const completedCategories = Object.keys(answers).filter(id => answers[id]);
+    const completedSections = new Set<string>();
+    
+    completedCategories.forEach(id => {
+      // Find which question this answer belongs to
+      const question = simplifiedQuestions.find(q => 
+        q.id === id || q.subQuestions?.some(sq => sq.id === id)
+      );
+      
+      if (question) {
+        const sectionId = getSectionFromCategory(question.id);
+        completedSections.add(sectionId);
+      }
+    });
+    
+    // Update sections with checkmarks
+    setSections(prev => 
+      prev.map(section => ({
+        ...section,
+        isChecked: completedSections.has(section.id)
+      }))
+    );
+    
+  }, [answers, currentSection]);
+  
   const handleSectionToggle = (id: string, checked: boolean) => {
     setSections(prev =>
       prev.map(section =>
@@ -80,73 +97,54 @@ const Index = () => {
 
   const handleSectionClick = (id: string) => {
     setCurrentSection(id);
+    // Find the first question category for this section
+    const categoryForSection = Object.entries(getSectionFromCategory)
+      .find(([_, section]) => section === id)?.[0];
+    
+    if (categoryForSection) {
+      setCurrentCategory(categoryForSection);
+    }
   };
 
   const handleAnswerChange = (questionId: string, answer: any) => {
-    const updatedGroups = questionGroups.map(group => {
-      const updatedQuestions = group.questions.map(q => {
-        if (q.id === questionId) {
-          return { ...q, answer };
-        }
-        
-        // Also check subquestions
-        if (q.subQuestions) {
-          const updatedSubQuestions = q.subQuestions.map(sub => 
-            sub.id === questionId ? { ...sub, answer } : sub
-          );
-          return { ...q, subQuestions: updatedSubQuestions };
-        }
-        
-        return q;
-      });
-      
-      return { ...group, questions: updatedQuestions };
-    });
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }));
     
-    // Update progressively as user answers questions
-    setTimeout(() => {
-      // In a real application, we would update the contract content based on answers
-      let newProgress = Math.min(contract.progress + Math.floor(Math.random() * 5) + 1, 100);
-      setContract(prev => ({
-        ...prev,
-        progress: newProgress,
-        content: newProgress > 0 ? sampleContract.content.replace('[JOB TITLE]', 
-          questionGroups.find(g => g.id === 'position-details')?.questions.find(q => q.id === 'job-title')?.answer as string || '[JOB TITLE]') : ""
-      }));
-    }, 300);
+    // Show a toast for better UX
+    toast({
+      title: "Answer Saved",
+      description: "Your response has been recorded.",
+    });
   };
 
   const handleNextQuestion = () => {
-    if (currentGroupIndex < filteredGroups.length - 1) {
-      setCurrentGroupIndex(prev => prev + 1);
-    } else {
-      // Find next section
-      const sectionIndex = sections.findIndex(s => s.id === currentSection);
-      if (sectionIndex < sections.length - 1) {
-        setCurrentSection(sections[sectionIndex + 1].id);
-        setCurrentGroupIndex(0);
-        
-        toast({
-          title: "Section Complete",
-          description: `You've completed the ${sections[sectionIndex].title} section.`,
-        });
-      }
+    const currentIndex = simplifiedQuestions.findIndex(q => q.id === currentCategory);
+    if (currentIndex < simplifiedQuestions.length - 1) {
+      const nextCategory = simplifiedQuestions[currentIndex + 1].id;
+      setCurrentCategory(nextCategory);
+      
+      // Update current section based on category
+      const nextSection = getSectionFromCategory(nextCategory);
+      setCurrentSection(nextSection);
+      
+      toast({
+        title: "Moving to Next Section",
+        description: `Now answering questions about ${simplifiedQuestions[currentIndex + 1].text}.`,
+      });
     }
   };
 
   const handlePreviousQuestion = () => {
-    if (currentGroupIndex > 0) {
-      setCurrentGroupIndex(prev => prev - 1);
-    } else {
-      // Find previous section
-      const sectionIndex = sections.findIndex(s => s.id === currentSection);
-      if (sectionIndex > 0) {
-        setCurrentSection(sections[sectionIndex - 1].id);
-        const prevFilteredGroups = questionGroups.filter(
-          group => group.section === sections[sectionIndex - 1].id
-        );
-        setCurrentGroupIndex(prevFilteredGroups.length - 1);
-      }
+    const currentIndex = simplifiedQuestions.findIndex(q => q.id === currentCategory);
+    if (currentIndex > 0) {
+      const prevCategory = simplifiedQuestions[currentIndex - 1].id;
+      setCurrentCategory(prevCategory);
+      
+      // Update current section based on category
+      const prevSection = getSectionFromCategory(prevCategory);
+      setCurrentSection(prevSection);
     }
   };
 
@@ -172,8 +170,8 @@ const Index = () => {
         </header>
 
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Panel - Contract Structure - Reduced from col-span-4 to col-span-3 */}
-          <div className="col-span-12 md:col-span-3">
+          {/* Left Panel - Contract Structure - 30% width */}
+          <div className="col-span-12 md:col-span-4 lg:col-span-3">
             <ContractStructure 
               sections={sections}
               warnings={warnings}
@@ -183,13 +181,19 @@ const Index = () => {
             />
           </div>
 
-          {/* Right Panel - Questions & Contract Preview - Increased from col-span-8 to col-span-9 */}
-          <div className="col-span-12 md:col-span-9">
+          {/* Right Panel - Questions & Contract Preview - 70% width */}
+          <div className="col-span-12 md:col-span-8 lg:col-span-9">
             <QuestionPanel 
-              currentGroup={currentGroup}
+              currentGroup={{
+                id: currentQuestionGroup.id,
+                title: currentQuestionGroup.text,
+                description: "Answer the following questions to generate your employment agreement",
+                questions: currentQuestionGroup.subQuestions || [currentQuestionGroup],
+                section: currentSection
+              }}
               onAnswerChange={handleAnswerChange}
-              currentQuestionIndex={currentGroupIndex}
-              totalQuestions={totalQuestionsInCurrentSection}
+              currentQuestionIndex={simplifiedQuestions.findIndex(q => q.id === currentCategory)}
+              totalQuestions={simplifiedQuestions.length}
               onNext={handleNextQuestion}
               onPrevious={handlePreviousQuestion}
               onAddToAnnexure={handleAddToAnnexure}
